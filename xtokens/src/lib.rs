@@ -33,7 +33,6 @@
 #![allow(clippy::too_many_arguments)]
 
 use frame_support::{
-	log,
 	pallet_prelude::*,
 	require_transactional,
 	traits::{Contains, Get},
@@ -725,12 +724,14 @@ pub mod module {
 		) -> Result<Xcm<T::RuntimeCall>, DispatchError> {
 			let mut reanchored_dest = dest;
 			if reserve == MultiLocation::parent() {
-				if let MultiLocation {
-					parents: 1,
-					interior: X1(Parachain(id)),
-				} = dest
-				{
-					reanchored_dest = Parachain(id).into();
+				match dest {
+					MultiLocation {
+						parents,
+						interior: X1(Parachain(id)),
+					} if parents == 1 => {
+						reanchored_dest = Parachain(id).into();
+					}
+					_ => {}
 				}
 			}
 
